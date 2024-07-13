@@ -27,7 +27,7 @@ fi
 
 # Check if repository name is provided
 if [ -z "$1" ]; then
-  echo "Usage: crepo <repository-name> [--public]"
+  echo "Usage: crepo \"repository-name\" [--public]"
   exit 1
 fi
 
@@ -70,6 +70,8 @@ else
   echo "Failed to create repository on GitHub."
   exit 1
 fi
+
+# Made by https://github.com/MarekCZFM :)
 
 # Initialize local repository and push to GitHub
 mkdir "$REPO_NAME_DASHED"
