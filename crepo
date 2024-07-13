@@ -1,0 +1,83 @@
+#!/bin/bash
+
+CONFIG_FILE=~/.github_credentials
+
+# Function to create configuration file and set credentials
+create_config_file() {
+  read -p "Enter your GitHub username: " GITHUB_USERNAME
+  read -s -p "Enter your GitHub token: " GITHUB_TOKEN
+  echo
+
+  echo "GITHUB_USERNAME=$GITHUB_USERNAME" > $CONFIG_FILE
+  echo "GITHUB_TOKEN=$GITHUB_TOKEN" >> $CONFIG_FILE
+
+  chmod 600 $CONFIG_FILE
+
+  echo "Configuration file created at $CONFIG_FILE with the provided credentials."
+}
+
+# Load GitHub credentials from configuration file or create the file if it doesn't exist
+if [ -f $CONFIG_FILE ]; then
+  source $CONFIG_FILE
+else
+  echo "Configuration file not found. Creating a new one..."
+  create_config_file
+  source $CONFIG_FILE
+fi
+
+# Check if repository name is provided
+if [ -z "$1" ]; then
+  echo "Usage: crepo <repository-name> [--public]"
+  exit 1
+fi
+
+# Variables
+REPO_NAME=$1
+REPO_NAME_DASHED=$(echo "$REPO_NAME" | sed 's/ /-/g')
+
+PRIVATE=true
+
+# Check if the --private flag is provided
+if [ "$2" == "--public" ]; then
+  PRIVATE=false
+fi
+if [ "$2" == "--private" ]; then
+  PRIVATE=true
+fi
+
+# URL encode the repository name
+REPO_NAME_ENCODED=$(echo -n "$REPO_NAME_DASHED" | jq -sRr @uri)
+
+# Create the repository using GitHub API
+RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+     -d "{\"name\": \"$REPO_NAME_DASHED\", \"private\": $PRIVATE}" \
+     https://api.github.com/user/repos)
+
+# Print the full response for debugging
+# echo "API Response: $RESPONSE"
+
+# Check for errors in the API response
+if echo "$RESPONSE" | jq -e .errors > /dev/null; then
+  echo "Error: $(echo $RESPONSE | jq -r '.message')"
+  echo "Details: $(echo $RESPONSE | jq -r '.errors[] | .message')"
+  exit 1
+fi
+
+# Confirm repository creation
+if echo "$RESPONSE" | jq -e .ssh_url > /dev/null; then
+  echo "Repository created successfully on GitHub: $(echo $RESPONSE | jq -r .html_url)"
+else
+  echo "Failed to create repository on GitHub."
+  exit 1
+fi
+
+# Initialize local repository and push to GitHub
+mkdir "$REPO_NAME_DASHED"
+cd "$REPO_NAME_DASHED" || { echo "Failed to change directory"; exit 1; }
+git init
+echo "# $REPO_NAME" >> README.md
+git add README.md
+git commit -m "Initial commit"
+git remote add origin "https://github.com/$GITHUB_USERNAME/$REPO_NAME_DASHED.git"
+git branch -M main
+git push -u origin main
