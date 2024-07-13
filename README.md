@@ -108,7 +108,7 @@ crepo "My pubic repo" --public
 
 ## Problems
 
-### Entered the wrong credentials the first time starting my program
+### Entered the wrong credentials the first time starting my program / My credentials expired or changed
 
 **Solution**: Delete the file *.github_credentials* in your home directory and restart the program:
 ```sh
