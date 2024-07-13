@@ -104,3 +104,14 @@ crepo "My private repo"
 crepo "My pubic repo" --public
 ```
 *Resulting repository will be named: My-public-repo and will be public*
+
+
+## Problems
+
+### Entered the wrong credentials the first time starting my program
+
+**Solution**: Delete the file *.github_credentials* in your home directory and restart the program:
+```sh
+rm ~/.github_credentials
+crepo
+```
