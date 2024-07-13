@@ -68,6 +68,7 @@ if echo "$RESPONSE" | jq -e .ssh_url > /dev/null; then
   echo "Repository created successfully on GitHub: $(echo $RESPONSE | jq -r .html_url)"
 else
   echo "Failed to create repository on GitHub."
+  echo "Details: $RESPONSE"
   exit 1
 fi
 
